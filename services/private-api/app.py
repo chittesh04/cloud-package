@@ -1,20 +1,45 @@
 import os
 import socket
+import time
 from functools import wraps
 
 import jwt
 import psycopg
 from flask import Flask, g, jsonify, request
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 app = Flask(__name__)
 DB_URL = os.environ["DATABASE_URL"]
 INTERNAL_SECRET = os.environ["INTERNAL_SERVICE_SECRET"]
 SERVICE_ID = socket.gethostname()
+CHAOS_ACTIVE = False
+
+POOL = ConnectionPool(DB_URL, min_size=2, max_size=10, kwargs={"row_factory": dict_row})
+
+@app.before_request
+def trace_request():
+    g.request_id = request.headers.get("X-Request-ID", "UNKNOWN")
+    if CHAOS_ACTIVE and request.path != "/admin/chaos":
+        time.sleep(2)
+        return jsonify(error="Simulated private cloud hardware failure"), 503
+
+@app.after_request
+def response_headers(response):
+    response.headers["X-Private-Service"] = SERVICE_ID
+    response.headers["X-Request-ID"] = getattr(g, "request_id", "UNKNOWN")
+    return response
+
+@app.post("/admin/chaos")
+def toggle_chaos():
+    global CHAOS_ACTIVE
+    body = request.get_json(silent=True) or {}
+    CHAOS_ACTIVE = body.get("active", False)
+    return jsonify(chaos=CHAOS_ACTIVE)
 
 
 def db():
-    return psycopg.connect(DB_URL, row_factory=dict_row)
+    return POOL.connection()
 
 
 def hybrid_only(fn):

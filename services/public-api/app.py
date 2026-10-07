@@ -1,7 +1,10 @@
 import os
 import socket
 import time
-from collections import Counter
+import threading
+import uuid
+from collections import Counter, deque
+import statistics
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
@@ -10,6 +13,7 @@ import psycopg
 import requests
 from flask import Flask, g, jsonify, request
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -20,10 +24,12 @@ PRIVATE_API_URL = os.environ["PRIVATE_API_URL"].rstrip("/")
 SERVICE_ID = socket.gethostname()
 METRICS = Counter()
 STARTED = time.time()
+LATENCIES = deque(maxlen=1000)
 
+POOL = ConnectionPool(DB_URL, min_size=2, max_size=10, kwargs={"row_factory": dict_row})
 
 def db():
-    return psycopg.connect(DB_URL, row_factory=dict_row)
+    return POOL.connection()
 
 
 def seed_demo_users():
@@ -67,6 +73,8 @@ def require_auth(admin=False):
 
 @app.before_request
 def track_request():
+    g.start_time = time.perf_counter()
+    g.request_id = request.headers.get("X-Request-ID", f"HC-{uuid.uuid4().hex[:8].upper()}")
     if request.path != "/health":
         METRICS["requests"] += 1
 
@@ -74,8 +82,12 @@ def track_request():
 @app.after_request
 def response_headers(response):
     response.headers["X-Public-Service"] = SERVICE_ID
-    if response.status_code >= 400:
-        METRICS["errors"] += 1
+    response.headers["X-Request-ID"] = getattr(g, "request_id", "UNKNOWN")
+    if request.path != "/health" and hasattr(g, 'start_time'):
+        latency = (time.perf_counter() - g.start_time) * 1000
+        LATENCIES.append(latency)
+        if response.status_code >= 400:
+            METRICS["errors"] += 1
     return response
 
 
@@ -174,11 +186,17 @@ def private_request(resource):
     internal = jwt.encode({"purpose": "hybrid-service", "subject_id": g.user["sub"], "role": g.user["role"], "exp": datetime.now(timezone.utc) + timedelta(seconds=60)}, INTERNAL_SECRET, algorithm="HS256")
     try:
         METRICS["private_calls"] += 1
-        response = requests.get(f"{PRIVATE_API_URL}/{resource}/{g.user['sub']}", headers={"X-Hybrid-Service-Token": internal}, timeout=5)
-        return jsonify(response.json()), response.status_code
+        response = requests.get(f"{PRIVATE_API_URL}/{resource}/{g.user['sub']}", headers={"X-Hybrid-Service-Token": internal, "X-Request-ID": g.request_id}, timeout=5)
+        data = response.json()
+        if isinstance(data, dict):
+            data["_trace"] = {
+                "request_id": g.request_id,
+                "private_service": response.headers.get("X-Private-Service", "unknown")
+            }
+        return jsonify(data), response.status_code
     except requests.RequestException:
         METRICS["private_failures"] += 1
-        return jsonify(error="Private-cloud service is currently unavailable"), 503
+        return jsonify(error="Private-cloud service is currently unavailable", request_id=g.request_id), 503
 
 
 @app.get("/academics")
@@ -202,14 +220,80 @@ def metrics():
             "admissions": conn.execute("SELECT COUNT(*) AS count FROM admissions").fetchone()["count"],
             "registrations": conn.execute("SELECT COUNT(*) AS count FROM registrations").fetchone()["count"],
         }
+
+    try:
+        r = requests.get(f"{PRIVATE_API_URL}/health", timeout=1)
+        private_status = "HEALTHY" if r.status_code == 200 else "DEGRADED"
+        hybrid_status = "HEALTHY"
+    except Exception:
+        private_status = "UNREACHABLE"
+        hybrid_status = "FAILED"
+
+    lats = list(LATENCIES)
+    avg_latency = statistics.mean(lats) if lats else 0
+    p95_latency = sorted(lats)[int(len(lats)*0.95)] if lats else 0
+    
+    try:
+        _, _, ips = socket.gethostbyname_ex("public-api")
+        current_replicas = len(ips)
+    except Exception:
+        ips = [SERVICE_ID]
+        current_replicas = 1
+
+    uptime = time.time() - STARTED
+    req_sec = METRICS["requests"] / uptime if uptime > 0 else 0
+    error_rate = (METRICS["errors"] / METRICS["requests"] * 100) if METRICS["requests"] > 0 else 0
+
     return jsonify({
-        "instance": SERVICE_ID,
-        "uptimeSeconds": int(time.time() - STARTED),
-        "configuredPublicReplicas": int(os.getenv("PUBLIC_REPLICAS", "1")),
-        "publicCloud": {**public_counts, "requestsThisInstance": METRICS["requests"], "errorsThisInstance": METRICS["errors"], "loginsThisInstance": METRICS["logins"]},
-        "hybridConnection": {"status": "healthy", "privateCallsThisInstance": METRICS["private_calls"], "failedCallsThisInstance": METRICS["private_failures"], "transport": "internal Docker hybrid_net + short-lived service JWT"},
-        "privateCloud": {"status": "reachable through gateway only", "database": "private-db is on internal private_net"},
+        "system": {
+            "publicCloud": "HEALTHY",
+            "privateCloud": private_status,
+            "hybridLink": hybrid_status,
+            "database": "HEALTHY"
+        },
+        "traffic": {
+            "requestsPerSec": round(req_sec, 1),
+            "avgLatencyMs": int(avg_latency),
+            "p95LatencyMs": int(p95_latency),
+            "errorRatePct": round(error_rate, 2),
+            "totalRequests": METRICS["requests"]
+        },
+        "capacity": {
+            "currentReplicas": current_replicas,
+            "minReplicas": int(os.getenv("MIN_REPLICAS", "1")),
+            "maxReplicas": int(os.getenv("MAX_REPLICAS", "3")),
+            "scalingState": "BURST MODE" if current_replicas > 1 else "NORMAL"
+        },
+        "services": [f"public-api-{i+1} ({ip})" for i, ip in enumerate(ips)] + ["private-api", "public-db", "private-db"],
+        "hybrid": {
+            "totalRequests": METRICS["private_calls"],
+            "successful": METRICS["private_calls"] - METRICS["private_failures"],
+            "failed": METRICS["private_failures"]
+        }
     })
+
+
+@app.post("/admin/chaos/private")
+@require_auth(admin=True)
+def chaos_private():
+    body = request.get_json(silent=True) or {}
+    try:
+        r = requests.post(f"{PRIVATE_API_URL}/admin/chaos", json={"active": body.get("active", False)}, timeout=2)
+        return jsonify(message="Private cloud chaos updated")
+    except:
+        return jsonify(error="Failed to reach private cloud"), 503
+
+
+def cpu_burner():
+    end = time.time() + 30
+    while time.time() < end:
+        _ = [x**2 for x in range(10000)]
+
+@app.post("/admin/chaos/public-cpu")
+@require_auth(admin=True)
+def chaos_public():
+    threading.Thread(target=cpu_burner).start()
+    return jsonify(message="Burning CPU for 30 seconds... Watch the autoscaler!")
 
 
 if __name__ == "__main__":

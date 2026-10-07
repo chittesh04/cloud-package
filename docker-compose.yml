@@ -1,6 +1,21 @@
 name: hybrid-college-cloud
 
 services:
+  autoscaler:
+    build: ./services/autoscaler
+    environment:
+      MIN_REPLICAS: ${MIN_REPLICAS:-1}
+      MAX_REPLICAS: ${MAX_REPLICAS:-3}
+      CPU_SCALE_UP: ${CPU_SCALE_UP:-70}
+      CPU_SCALE_DOWN: ${CPU_SCALE_DOWN:-30}
+      REQUEST_THRESHOLD: ${REQUEST_THRESHOLD:-100}
+      POLL_INTERVAL: 5
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./:/project:ro
+    networks:
+      - public_net
+
   proxy:
     image: nginx:1.27-alpine
     ports:
