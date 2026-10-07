@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PSG Hybrid College Cloud</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><div><span class="eyebrow">HYBRID CLOUD COLLEGE APPLICATION</span><h1>PSG College Portal</h1></div><div id="identity"></div></header>
+  <main>
+    <section id="auth-view" class="auth-grid">
+      <article class="panel"><h2>Welcome</h2><p>Public-cloud student services with securely connected private academic and financial records.</p><div class="notice">Demo student: <code>student@college.edu</code> / <code>Student@123</code><br>Demo admin: <code>admin@college.edu</code> / <code>Admin@123</code></div></article>
+      <form id="login-form" class="panel"><h2>Sign in</h2><label>Email<input name="email" type="email" value="student@college.edu" required></label><label>Password<input name="password" type="password" value="Student@123" required></label><button>Sign in securely</button><p id="login-message" class="message"></p></form>
+    </section>
+    <section id="app-view" hidden>
+      <nav id="tabs"><button data-view="home" class="active">Overview</button><button data-view="courses">Course registration</button><button data-view="materials">E-learning</button><button data-view="private">Private records</button><button data-view="admission">Admission</button><button data-view="admin" id="admin-tab" hidden>Admin monitoring</button><button id="logout" class="quiet">Sign out</button></nav>
+      <section id="home" class="view"><div class="hero"><span class="badge public">PUBLIC CLOUD</span><h2>Student-facing services, designed to scale</h2><p>Admission, course registration and e-learning use the load-balanced public service. Sensitive records travel through the authenticated hybrid connection only.</p></div><div class="cards"><article><h3>Public cloud</h3><p>Admission portal, course registration, e-learning materials and authentication.</p></article><article><h3>Private cloud</h3><p>Academic records and financial transactions, isolated from browser access.</p></article><article><h3>Hybrid connection</h3><p>Public gateway validates your JWT, then uses a short-lived internal service token.</p></article></div></section>
+      <section id="courses" class="view" hidden><h2>Course registration <span class="badge public">PUBLIC CLOUD</span></h2><p>Select a course to add it for Semester 5.</p><div id="course-list" class="cards"></div></section>
+      <section id="materials" class="view" hidden><h2>E-learning materials <span class="badge public">PUBLIC CLOUD</span></h2><div id="material-list" class="cards"></div></section>
+      <section id="private" class="view" hidden><h2>Private student records <span class="badge private">PRIVATE CLOUD via secure hybrid connection</span></h2><div class="two-col"><article class="panel"><h3>Academic records</h3><div id="academic-records"></div></article><article class="panel"><h3>Financial records</h3><div id="finance-records"></div></article></div></section>
+      <section id="admission" class="view" hidden><h2>Admission application <span class="badge public">PUBLIC CLOUD</span></h2><form id="admission-form" class="panel compact"><label>Applicant name<input name="applicant_name" required></label><label>Email<input name="email" type="email" required></label><label>Programme<input name="programme" value="MCA" required></label><label>Prior qualification<input name="prior_qualification" value="BCA" required></label><button>Submit application</button><p id="admission-message" class="message"></p></form></section>
+      <section id="admin" class="view" hidden><h2>Cloud monitoring dashboard <span class="badge admin">ADMIN ONLY</span></h2><p>Refresh to observe public traffic during the load-test and cloud-bursting demonstration.</p><button id="refresh-metrics">Refresh metrics</button><div id="metrics" class="cards metric-cards"></div></section>
+    </section>
+  </main><footer>College project prototype - local simulation of public cloud, private cloud and hybrid cloud.</footer><script src="app.js"></script>
+</body></html>

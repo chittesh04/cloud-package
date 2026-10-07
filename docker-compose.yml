@@ -1,0 +1,100 @@
+name: hybrid-college-cloud
+
+services:
+  proxy:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      public-api:
+        condition: service_healthy
+    networks:
+      - public_net
+
+  public-api:
+    build: ./services/public-api
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-college_app}:${POSTGRES_PASSWORD:-college_demo_password}@public-db:5432/${PUBLIC_DB:-college_public}
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-change-me}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-development-internal-secret-change-me}
+      PRIVATE_API_URL: http://private-api:5001
+      PUBLIC_REPLICAS: ${PUBLIC_REPLICAS:-1}
+    depends_on:
+      public-db:
+        condition: service_healthy
+      private-api:
+        condition: service_healthy
+    networks:
+      - public_net
+      - hybrid_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  private-api:
+    build: ./services/private-api
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-college_app}:${POSTGRES_PASSWORD:-college_demo_password}@private-db:5432/${PRIVATE_DB:-college_private}
+      JWT_SECRET: ${JWT_SECRET:-development-jwt-secret-change-me}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-development-internal-secret-change-me}
+    depends_on:
+      private-db:
+        condition: service_healthy
+    networks:
+      - private_net
+      - hybrid_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  public-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-college_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-college_demo_password}
+      POSTGRES_DB: ${PUBLIC_DB:-college_public}
+    volumes:
+      - public_db_data:/var/lib/postgresql/data
+      - ./database/public/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - public_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-college_app} -d ${PUBLIC_DB:-college_public}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  private-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-college_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-college_demo_password}
+      POSTGRES_DB: ${PRIVATE_DB:-college_private}
+    volumes:
+      - private_db_data:/var/lib/postgresql/data
+      - ./database/private/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - private_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-college_app} -d ${PRIVATE_DB:-college_private}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+networks:
+  public_net:
+  hybrid_net:
+    internal: true
+  private_net:
+    internal: true
+
+volumes:
+  public_db_data:
+  private_db_data:
