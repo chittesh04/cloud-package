@@ -1,49 +1,367 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PSG Hybrid College Cloud</title><link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PSG CloudCampus — Hybrid Cloud College Platform</title>
+  <meta name="description" content="PSG College's hybrid cloud platform for admissions, course registration, e-learning, and secure academic records.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header><div><span class="eyebrow">HYBRID CLOUD COLLEGE APPLICATION</span><h1>PSG College Portal</h1></div><div id="identity"></div></header>
-  <main>
-    <section id="auth-view" class="auth-grid">
-      <article class="panel"><h2>Welcome</h2><p>Public-cloud student services with securely connected private academic and financial records.</p><div class="notice">Demo student: <code>student@college.edu</code> / <code>Student@123</code><br>Demo admin: <code>admin@college.edu</code> / <code>Admin@123</code></div></article>
-      <form id="login-form" class="panel"><h2>Sign in</h2><label>Email<input name="email" type="email" value="student@college.edu" required></label><label>Password<input name="password" type="password" value="Student@123" required></label><button>Sign in securely</button><p id="login-message" class="message"></p></form>
-    </section>
-    <section id="app-view" hidden>
-      <nav id="tabs"><button data-view="home" class="active">Overview</button><button data-view="courses">Course registration</button><button data-view="materials">E-learning</button><button data-view="private">Private records</button><button data-view="admission">Admission</button><button data-view="admin" id="admin-tab" hidden>Admin monitoring</button><button id="logout" class="quiet">Sign out</button></nav>
-      <section id="home" class="view"><div class="hero"><span class="badge public">PUBLIC CLOUD</span><h2>Student-facing services, designed to scale</h2><p>Admission, course registration and e-learning use the load-balanced public service. Sensitive records travel through the authenticated hybrid connection only.</p></div><div class="cards"><article><h3>Public cloud</h3><p>Admission portal, course registration, e-learning materials and authentication.</p></article><article><h3>Private cloud</h3><p>Academic records and financial transactions, isolated from browser access.</p></article><article><h3>Hybrid connection</h3><p>Public gateway validates your JWT, then uses a short-lived internal service token.</p></article></div></section>
-      <section id="courses" class="view" hidden><h2>Course registration <span class="badge public">PUBLIC CLOUD</span></h2><p>Select a course to add it for Semester 5.</p><div id="course-list" class="cards"></div></section>
-      <section id="materials" class="view" hidden><h2>E-learning materials <span class="badge public">PUBLIC CLOUD</span></h2><div id="material-list" class="cards"></div></section>
-      <section id="private" class="view" hidden><h2>Private student records <span class="badge private">PRIVATE CLOUD via secure hybrid connection</span></h2><div class="two-col"><article class="panel"><h3>Academic records</h3><div id="academic-records"></div></article><article class="panel"><h3>Financial records</h3><div id="finance-records"></div></article></div></section>
-      <section id="admission" class="view" hidden><h2>Admission application <span class="badge public">PUBLIC CLOUD</span></h2><form id="admission-form" class="panel compact"><label>Applicant name<input name="applicant_name" required></label><label>Email<input name="email" type="email" required></label><label>Programme<input name="programme" value="MCA" required></label><label>Prior qualification<input name="prior_qualification" value="BCA" required></label><button>Submit application</button><p id="admission-message" class="message"></p></form></section>
-      <section id="admin" class="view" hidden>
-        <h2>Cloud monitoring dashboard <span class="badge admin">ADMIN ONLY</span></h2>
-        <p>Live metrics updated from the cluster. Load test triggers bursting.</p>
-        <button id="refresh-metrics">Refresh metrics</button>
-        <div id="metrics-grid" class="dashboard-grid">
-          <article class="panel"><h3>SYSTEM STATUS</h3><div id="metric-system"></div></article>
-          <article class="panel"><h3>TRAFFIC</h3><div id="metric-traffic"></div></article>
-          <article class="panel"><h3>CAPACITY</h3><div id="metric-capacity"></div></article>
-          <article class="panel"><h3>HYBRID TRAFFIC</h3><div id="metric-hybrid"></div></article>
+
+  <!-- ───── AUTH SCREEN ───── -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-bg">
+      <div class="auth-orb auth-orb--1"></div>
+      <div class="auth-orb auth-orb--2"></div>
+      <div class="auth-orb auth-orb--3"></div>
+    </div>
+    <div class="auth-container">
+      <div class="auth-hero">
+        <div class="auth-logo">
+          <svg viewBox="0 0 40 40" fill="none" width="40" height="40"><rect width="40" height="40" rx="10" fill="url(#lg)"/><path d="M12 20a8 8 0 0116 0" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="3" fill="#fff"/><path d="M20 13v-3M27 15l2-2M29 22h3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><defs><linearGradient id="lg" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+          <span>CloudCampus</span>
         </div>
-        <div id="charts-grid" class="dashboard-grid" style="margin-top:20px;">
-          <article class="panel"><h3>Traffic (req/s)</h3><canvas id="traffic-chart"></canvas></article>
-          <article class="panel"><h3>Public Replicas</h3><canvas id="replicas-chart"></canvas></article>
-          <article class="panel" style="grid-column: 1 / -1"><h3>Latency (ms)</h3><canvas id="latency-chart"></canvas></article>
+        <h1>Welcome to PSG College</h1>
+        <p class="auth-hero-sub">Hybrid Cloud College Platform — securely connecting public student services with private academic infrastructure.</p>
+        <div class="auth-features">
+          <div class="auth-feature"><span class="af-icon">🎓</span><div><strong>Course Registration</strong><small>Browse and enroll in semester courses</small></div></div>
+          <div class="auth-feature"><span class="af-icon">📚</span><div><strong>E-Learning Hub</strong><small>Access study materials & resources</small></div></div>
+          <div class="auth-feature"><span class="af-icon">🔒</span><div><strong>Secure Records</strong><small>Private cloud academic & financial data</small></div></div>
         </div>
-        <article class="panel" style="margin-top:20px;">
-          <h3>Fault Injection & Chaos Engineering</h3>
-          <p>Simulate cloud outages and load spikes to demonstrate hybrid isolation and elasticity.</p>
-          <div style="display:flex; gap:10px; margin-top:10px;">
-            <button id="btn-chaos-private" style="background:#b42318;">Kill Private API</button>
-            <button id="btn-chaos-public" style="background:#ad5c00;">Overload Public CPU</button>
+      </div>
+      <div class="auth-card">
+        <h2>Sign in to your account</h2>
+        <p class="auth-card-sub">Enter your credentials to access the platform</p>
+        <form id="login-form" autocomplete="off">
+          <div class="field">
+            <label for="login-email">Email address</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+              <input id="login-email" name="email" type="email" value="student@college.edu" required placeholder="you@college.edu">
+            </div>
           </div>
-        </article>
-      </section>
-    </section>
-  </main><footer>College project prototype - local simulation of public cloud, private cloud and hybrid cloud.</footer>
+          <div class="field">
+            <label for="login-password">Password</label>
+            <div class="input-wrap">
+              <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+              <input id="login-password" name="password" type="password" value="Student@123" required placeholder="••••••••">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+            <span class="btn-text">Sign in securely</span>
+            <span class="btn-loader" hidden></span>
+          </button>
+          <p id="login-message" class="form-message"></p>
+        </form>
+        <div class="auth-demo-notice">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+          <div>
+            <strong>Demo credentials</strong>
+            <span>Student: <code>student@college.edu</code> / <code>Student@123</code></span>
+            <span>Admin: <code>admin@college.edu</code> / <code>Admin@123</code></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── MAIN APP SHELL ───── -->
+  <div id="app-shell" class="app-shell" hidden>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg viewBox="0 0 40 40" fill="none" width="32" height="32"><rect width="40" height="40" rx="10" fill="url(#lg2)"/><path d="M12 20a8 8 0 0116 0" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="3" fill="#fff"/><path d="M20 13v-3M27 15l2-2M29 22h3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>
+          <span>CloudCampus</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <button data-view="home" class="nav-item active">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+          <span>Overview</span>
+        </button>
+        <button data-view="courses" class="nav-item">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z"/></svg>
+          <span>Courses</span>
+        </button>
+        <button data-view="materials" class="nav-item">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+          <span>E-Learning</span>
+        </button>
+        <div class="nav-section-label">Secure</div>
+        <button data-view="private" class="nav-item">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+          <span>Private Records</span>
+          <span class="nav-badge private-badge">VPN</span>
+        </button>
+        <button data-view="admission" class="nav-item">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
+          <span>Admission</span>
+        </button>
+        <button data-view="admin" id="admin-tab" class="nav-item" hidden>
+          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+          <span>Monitoring</span>
+          <span class="nav-badge admin-badge">Admin</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebar-user">
+          <div class="user-avatar" id="user-avatar">S</div>
+          <div class="user-info">
+            <strong id="user-name">Student</strong>
+            <small id="user-role">student</small>
+          </div>
+        </div>
+        <button id="logout" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+          Sign out
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+        </button>
+        <div class="topbar-title" id="topbar-title">
+          <h2>Overview</h2>
+          <span class="topbar-breadcrumb">Dashboard</span>
+        </div>
+        <div class="topbar-actions">
+          <div class="cloud-status-pill" id="cloud-status-pill">
+            <span class="status-dot status-dot--ok"></span>
+            <span>All systems operational</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-content" id="page-content">
+        <!-- ── OVERVIEW ── -->
+        <section id="home" class="view">
+          <div class="hero-banner">
+            <div class="hero-banner-content">
+              <span class="pill pill--public">HYBRID CLOUD PLATFORM</span>
+              <h2>Student services, designed to scale</h2>
+              <p>Admissions, course registration and e-learning run on the load-balanced public cloud. Sensitive academic and financial records travel through the authenticated hybrid connection only.</p>
+            </div>
+            <div class="hero-banner-graphic">
+              <div class="cloud-graphic">
+                <div class="cloud-node cloud-node--public">
+                  <span>Public Cloud</span>
+                  <small>Student APIs</small>
+                </div>
+                <div class="cloud-link">
+                  <svg width="60" height="20"><line x1="0" y1="10" x2="60" y2="10" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="4 4"><animate attributeName="stroke-dashoffset" from="8" to="0" dur="1s" repeatCount="indefinite"/></line></svg>
+                </div>
+                <div class="cloud-node cloud-node--private">
+                  <span>Private Cloud</span>
+                  <small>Secure Records</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-icon stat-icon--blue">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="22" height="22"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/></svg>
+              </div>
+              <div><strong>Course Registration</strong><span>Browse & enroll in semester courses with real-time seat tracking</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-icon--purple">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="22" height="22"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+              </div>
+              <div><strong>Hybrid Security</strong><span>JWT authentication with short-lived internal service tokens</span></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-icon--teal">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="22" height="22"><path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z" clip-rule="evenodd"/></svg>
+              </div>
+              <div><strong>Auto Scaling</strong><span>Nginx load balancing with elastic cloud-burst capacity</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── COURSES ── -->
+        <section id="courses" class="view" hidden>
+          <div class="view-header">
+            <div>
+              <h2>Course Registration</h2>
+              <p class="view-sub">Browse available courses and register for Semester 5</p>
+            </div>
+            <span class="pill pill--public">PUBLIC CLOUD</span>
+          </div>
+          <div id="course-list" class="card-grid">
+            <div class="skeleton-loader"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+          </div>
+        </section>
+
+        <!-- ── E-LEARNING ── -->
+        <section id="materials" class="view" hidden>
+          <div class="view-header">
+            <div>
+              <h2>E-Learning Hub</h2>
+              <p class="view-sub">Access study materials, notes and learning resources</p>
+            </div>
+            <span class="pill pill--public">PUBLIC CLOUD</span>
+          </div>
+          <div id="material-list" class="card-grid">
+            <div class="skeleton-loader"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+          </div>
+        </section>
+
+        <!-- ── PRIVATE RECORDS ── -->
+        <section id="private" class="view" hidden>
+          <div class="view-header">
+            <div>
+              <h2>Private Student Records</h2>
+              <p class="view-sub">Accessed via secure hybrid connection to the private cloud</p>
+            </div>
+            <span class="pill pill--private">PRIVATE CLOUD · VPN TUNNEL</span>
+          </div>
+          <div class="records-grid">
+            <div class="data-panel">
+              <div class="data-panel-header">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z"/></svg>
+                <h3>Academic Records</h3>
+              </div>
+              <div id="academic-records" class="data-panel-body"><div class="skeleton-table"></div></div>
+            </div>
+            <div class="data-panel">
+              <div class="data-panel-header">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                <h3>Financial Records</h3>
+              </div>
+              <div id="finance-records" class="data-panel-body"><div class="skeleton-table"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── ADMISSION ── -->
+        <section id="admission" class="view" hidden>
+          <div class="view-header">
+            <div>
+              <h2>Admission Application</h2>
+              <p class="view-sub">Submit your application for a programme at PSG College</p>
+            </div>
+            <span class="pill pill--public">PUBLIC CLOUD</span>
+          </div>
+          <div class="form-layout">
+            <form id="admission-form" class="app-form">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="adm-name">Applicant name</label>
+                  <input id="adm-name" name="applicant_name" required placeholder="Enter your full name">
+                </div>
+                <div class="field">
+                  <label for="adm-email">Email address</label>
+                  <input id="adm-email" name="email" type="email" required placeholder="you@example.com">
+                </div>
+                <div class="field">
+                  <label for="adm-programme">Programme</label>
+                  <input id="adm-programme" name="programme" value="MCA" required>
+                </div>
+                <div class="field">
+                  <label for="adm-qual">Prior qualification</label>
+                  <input id="adm-qual" name="prior_qualification" value="BCA" required>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/></svg>
+                Submit Application
+              </button>
+              <p id="admission-message" class="form-message"></p>
+            </form>
+            <div class="form-info-panel">
+              <h3>Application Process</h3>
+              <div class="process-steps">
+                <div class="process-step"><span class="step-num">1</span><div><strong>Submit</strong><small>Fill in your details and submit the form</small></div></div>
+                <div class="process-step"><span class="step-num">2</span><div><strong>Review</strong><small>Applications are reviewed within 5 business days</small></div></div>
+                <div class="process-step"><span class="step-num">3</span><div><strong>Decision</strong><small>You'll receive an email with the outcome</small></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── ADMIN MONITORING ── -->
+        <section id="admin" class="view" hidden>
+          <div class="view-header">
+            <div>
+              <h2>Cloud Monitoring</h2>
+              <p class="view-sub">Real-time infrastructure metrics and system health</p>
+            </div>
+            <div class="view-header-actions">
+              <span class="pill pill--admin">ADMIN ONLY</span>
+              <button id="refresh-metrics" class="btn btn-outline btn-sm">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="metrics-grid" id="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-card-header"><span class="metric-dot metric-dot--green"></span>System Status</div>
+              <div id="metric-system" class="metric-card-body"></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card-header"><span class="metric-dot metric-dot--blue"></span>Traffic</div>
+              <div id="metric-traffic" class="metric-card-body"></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card-header"><span class="metric-dot metric-dot--purple"></span>Capacity</div>
+              <div id="metric-capacity" class="metric-card-body"></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-card-header"><span class="metric-dot metric-dot--teal"></span>Hybrid Traffic</div>
+              <div id="metric-hybrid" class="metric-card-body"></div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-panel">
+              <div class="chart-panel-header"><h3>Traffic (req/s)</h3></div>
+              <canvas id="traffic-chart"></canvas>
+            </div>
+            <div class="chart-panel">
+              <div class="chart-panel-header"><h3>Public Replicas</h3></div>
+              <canvas id="replicas-chart"></canvas>
+            </div>
+            <div class="chart-panel chart-panel--wide">
+              <div class="chart-panel-header"><h3>Latency (ms)</h3></div>
+              <canvas id="latency-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="chaos-panel">
+            <div class="chaos-panel-header">
+              <h3>Fault Injection & Chaos Engineering</h3>
+              <p>Simulate cloud outages and load spikes to demonstrate hybrid isolation and elasticity.</p>
+            </div>
+            <div class="chaos-actions">
+              <button id="btn-chaos-private" class="btn btn-danger">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                Kill Private API
+              </button>
+              <button id="btn-chaos-public" class="btn btn-warning">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd"/></svg>
+                Overload Public CPU
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="app.js"></script>
-</body></html>
+</body>
+</html>
